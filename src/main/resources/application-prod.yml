@@ -1,7 +1,8 @@
 spring:
   # PostgreSQL Configuration (Production)
+  # Supports both individual vars and DATABASE_URL format
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:tempest}
+    url: ${DATABASE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:tempest}}
     username: ${DB_USERNAME:tempest}
     password: ${DB_PASSWORD:tempest}
     driver-class-name: org.postgresql.Driver
@@ -12,7 +13,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -21,8 +22,10 @@ spring:
   thymeleaf:
     cache: true
 
+server:
+  port: ${PORT:8080}
+
 logging:
   level:
     com.tempest: INFO
     org.springframework: WARN
-
