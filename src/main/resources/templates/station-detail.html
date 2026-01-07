@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Tempest - ' + (${station != null} ? ${station.name} : 'Station')">Tempest - Station</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                        <circle cx="12" cy="12" r="5"/>
+                    </svg>
+                </div>
+                <span class="logo-text">Tempest</span>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="/history" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    History
+                </a>
+                <a href="/stations" class="nav-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="10" r="3"/>
+                        <path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/>
+                    </svg>
+                    Stations
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>System Online</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="page-header">
+                <div class="header-content">
+                    <h1 th:text="${station != null} ? ${station.name} : 'Unknown Station'">Station Name</h1>
+                    <p class="header-subtitle" th:if="${station}">
+                        <span th:text="${station.stationId}">station-id</span>
+                        <span th:if="${station.location}"> • <span th:text="${station.location}">Location</span></span>
+                    </p>
+                </div>
+                <a href="/stations" class="btn btn-refresh">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    Back to Stations
+                </a>
+            </header>
+
+            <!-- Current Reading -->
+            <section class="current-conditions" th:if="${current}">
+                <div class="condition-card temperature-card">
+                    <div class="card-header">
+                        <span class="card-label">Temperature</span>
+                    </div>
+                    <div class="card-value">
+                        <span class="value" th:text="${current.temperature != null ? #numbers.formatDecimal(current.temperature, 1, 1) : '--'}">--</span>
+                        <span class="unit">°C</span>
+                    </div>
+                </div>
+
+                <div class="condition-card humidity-card">
+                    <div class="card-header">
+                        <span class="card-label">Humidity</span>
+                    </div>
+                    <div class="card-value">
+                        <span class="value" th:text="${current.humidity != null ? #numbers.formatDecimal(current.humidity, 1, 0) : '--'}">--</span>
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+
+                <div class="condition-card pressure-card">
+                    <div class="card-header">
+                        <span class="card-label">Pressure</span>
+                    </div>
+                    <div class="card-value">
+                        <span class="value" th:text="${current.pressure != null ? #numbers.formatDecimal(current.pressure, 1, 1) : '--'}">--</span>
+                        <span class="unit">hPa</span>
+                    </div>
+                </div>
+
+                <div class="condition-card wind-card">
+                    <div class="card-header">
+                        <span class="card-label">Wind</span>
+                    </div>
+                    <div class="card-value">
+                        <span class="value" th:text="${current.windSpeed != null ? #numbers.formatDecimal(current.windSpeed, 1, 1) : '--'}">--</span>
+                        <span class="unit">km/h</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chart -->
+            <section class="charts-section" th:if="${history != null and !history.isEmpty()}">
+                <div class="chart-container" style="grid-column: 1 / -1;">
+                    <h3 class="chart-title">24-Hour History</h3>
+                    <canvas id="stationChart"></canvas>
+                </div>
+            </section>
+
+            <!-- No Data -->
+            <div class="empty-state" th:if="${current == null}" style="text-align: center; padding: 60px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                <h3>No Data Yet</h3>
+                <p style="color: var(--text-muted);">This station hasn't sent any readings yet.</p>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const historyData = /*[[${history}]]*/ [];
+        
+        if (historyData.length > 0 && document.getElementById('stationChart')) {
+            const labels = historyData.map(r => {
+                const date = new Date(r.timestamp);
+                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            });
+            
+            Chart.defaults.color = '#8b9dc3';
+            Chart.defaults.font.family = "'JetBrains Mono', monospace";
+
+            new Chart(document.getElementById('stationChart'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Temperature (°C)',
+                            data: historyData.map(r => r.temperature),
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Humidity (%)',
+                            data: historyData.map(r => r.humidity),
+                            borderColor: '#4ecdc4',
+                            backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(139, 157, 195, 0.1)' },
+                            ticks: { maxTicksLimit: 12 }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: { color: 'rgba(139, 157, 195, 0.1)' },
+                            title: { display: true, text: '°C' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: '%' },
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+        /*]]>*/
+    </script>
+</body>
+</html>
+
