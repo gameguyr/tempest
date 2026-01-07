@@ -1,0 +1,165 @@
+package com.tempest.service;
+
+import com.tempest.dto.WeatherReadingDTO;
+import com.tempest.dto.WeatherStatsDTO;
+import com.tempest.entity.WeatherReading;
+import com.tempest.entity.WeatherStation;
+import com.tempest.repository.WeatherReadingRepository;
+import com.tempest.repository.WeatherStationRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class WeatherService {
+
+    private final WeatherReadingRepository readingRepository;
+    private final WeatherStationRepository stationRepository;
+
+    /**
+     * Record a new weather reading from a station.
+     */
+    @Transactional
+    public WeatherReading recordReading(WeatherReadingDTO dto) {
+        log.debug("Recording weather reading from station: {}", dto.getStationId());
+
+        WeatherReading reading = WeatherReading.builder()
+                .stationId(dto.getStationId())
+                .timestamp(dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now())
+                .temperature(dto.getTemperature())
+                .humidity(dto.getHumidity())
+                .pressure(dto.getPressure())
+                .windSpeed(dto.getWindSpeed())
+                .windDirection(dto.getWindDirection())
+                .rainfall(dto.getRainfall())
+                .uvIndex(dto.getUvIndex())
+                .lightLevel(dto.getLightLevel())
+                .batteryVoltage(dto.getBatteryVoltage())
+                .build();
+
+        WeatherReading saved = readingRepository.save(reading);
+
+        // Update station's last seen timestamp
+        if (dto.getStationId() != null) {
+            stationRepository.findByStationId(dto.getStationId())
+                    .ifPresent(station -> {
+                        station.setLastSeen(LocalDateTime.now());
+                        stationRepository.save(station);
+                    });
+        }
+
+        log.info("Recorded reading ID {} from station {}", saved.getId(), dto.getStationId());
+        return saved;
+    }
+
+    /**
+     * Get the latest weather reading.
+     */
+    public Optional<WeatherReading> getLatestReading() {
+        return readingRepository.findTopByOrderByTimestampDesc();
+    }
+
+    /**
+     * Get the latest reading for a specific station.
+     */
+    public Optional<WeatherReading> getLatestReadingForStation(String stationId) {
+        return readingRepository.findTopByStationIdOrderByTimestampDesc(stationId);
+    }
+
+    /**
+     * Get readings from the last N hours.
+     */
+    public List<WeatherReading> getReadingsForLastHours(int hours) {
+        LocalDateTime since = LocalDateTime.now().minusHours(hours);
+        return readingRepository.findReadingsSince(since);
+    }
+
+    /**
+     * Get readings for a station from the last N hours.
+     */
+    public List<WeatherReading> getReadingsForStation(String stationId, int hours) {
+        LocalDateTime since = LocalDateTime.now().minusHours(hours);
+        return readingRepository.findReadingsSinceForStation(stationId, since);
+    }
+
+    /**
+     * Get paginated readings.
+     */
+    public Page<WeatherReading> getReadings(int page, int size) {
+        return readingRepository.findAll(PageRequest.of(page, size));
+    }
+
+    /**
+     * Get weather statistics for the last N hours.
+     */
+    public WeatherStatsDTO getStats(int hours) {
+        LocalDateTime since = LocalDateTime.now().minusHours(hours);
+        List<WeatherReading> readings = readingRepository.findReadingsSince(since);
+
+        if (readings.isEmpty()) {
+            return WeatherStatsDTO.empty();
+        }
+
+        return WeatherStatsDTO.builder()
+                .minTemperature(readings.stream()
+                        .filter(r -> r.getTemperature() != null)
+                        .mapToDouble(WeatherReading::getTemperature)
+                        .min().orElse(0))
+                .maxTemperature(readings.stream()
+                        .filter(r -> r.getTemperature() != null)
+                        .mapToDouble(WeatherReading::getTemperature)
+                        .max().orElse(0))
+                .avgTemperature(readings.stream()
+                        .filter(r -> r.getTemperature() != null)
+                        .mapToDouble(WeatherReading::getTemperature)
+                        .average().orElse(0))
+                .avgHumidity(readings.stream()
+                        .filter(r -> r.getHumidity() != null)
+                        .mapToDouble(WeatherReading::getHumidity)
+                        .average().orElse(0))
+                .avgPressure(readings.stream()
+                        .filter(r -> r.getPressure() != null)
+                        .mapToDouble(WeatherReading::getPressure)
+                        .average().orElse(0))
+                .totalRainfall(readings.stream()
+                        .filter(r -> r.getRainfall() != null)
+                        .mapToDouble(WeatherReading::getRainfall)
+                        .sum())
+                .maxWindSpeed(readings.stream()
+                        .filter(r -> r.getWindSpeed() != null)
+                        .mapToDouble(WeatherReading::getWindSpeed)
+                        .max().orElse(0))
+                .readingCount(readings.size())
+                .periodHours(hours)
+                .build();
+    }
+
+    // Station management methods
+
+    public List<WeatherStation> getAllStations() {
+        return stationRepository.findAll();
+    }
+
+    public List<WeatherStation> getActiveStations() {
+        return stationRepository.findByIsActiveTrue();
+    }
+
+    public Optional<WeatherStation> getStation(String stationId) {
+        return stationRepository.findByStationId(stationId);
+    }
+
+    @Transactional
+    public WeatherStation createOrUpdateStation(WeatherStation station) {
+        return stationRepository.save(station);
+    }
+}
+

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tempest - History</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .history-table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .history-table th,
+        .history-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .history-table th {
+            background: var(--bg-tertiary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+        
+        .history-table td {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+        
+        .history-table tr:hover td {
+            background: var(--bg-hover);
+        }
+        
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .value-temp { color: #ff6b6b; }
+        .value-humidity { color: #4ecdc4; }
+        .value-pressure { color: #a29bfe; }
+        .value-wind { color: #74b9ff; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                        <circle cx="12" cy="12" r="5"/>
+                    </svg>
+                </div>
+                <span class="logo-text">Tempest</span>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="/history" class="nav-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    History
+                </a>
+                <a href="/stations" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="10" r="3"/>
+                        <path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/>
+                    </svg>
+                    Stations
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>System Online</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="page-header">
+                <div class="header-content">
+                    <h1>Weather History</h1>
+                    <p class="header-subtitle">Last 7 days of readings</p>
+                </div>
+            </header>
+
+            <div class="history-table-container">
+                <table class="history-table" th:if="${readings != null and !readings.isEmpty()}">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Station</th>
+                            <th>Temp (°C)</th>
+                            <th>Humidity (%)</th>
+                            <th>Pressure (hPa)</th>
+                            <th>Wind (km/h)</th>
+                            <th>Rain (mm)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="reading : ${readings}">
+                            <td th:text="${#temporals.format(reading.timestamp, 'MMM d, HH:mm')}">--</td>
+                            <td th:text="${reading.stationId ?: 'Default'}">--</td>
+                            <td class="value-temp" th:text="${reading.temperature != null ? #numbers.formatDecimal(reading.temperature, 1, 1) : '--'}">--</td>
+                            <td class="value-humidity" th:text="${reading.humidity != null ? #numbers.formatDecimal(reading.humidity, 1, 0) : '--'}">--</td>
+                            <td class="value-pressure" th:text="${reading.pressure != null ? #numbers.formatDecimal(reading.pressure, 1, 1) : '--'}">--</td>
+                            <td class="value-wind" th:text="${reading.windSpeed != null ? #numbers.formatDecimal(reading.windSpeed, 1, 1) : '--'}">--</td>
+                            <td th:text="${reading.rainfall != null ? #numbers.formatDecimal(reading.rainfall, 1, 2) : '0.0'}">--</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="empty-state" th:if="${readings == null or readings.isEmpty()}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    <h3>No Data Yet</h3>
+                    <p>Weather readings will appear here once your station starts sending data.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tempest - Weather Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                        <circle cx="12" cy="12" r="5"/>
+                    </svg>
+                </div>
+                <span class="logo-text">Tempest</span>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/" class="nav-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="/history" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    History
+                </a>
+                <a href="/stations" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="10" r="3"/>
+                        <path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/>
+                    </svg>
+                    Stations
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>System Online</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="page-header">
+                <div class="header-content">
+                    <h1>Weather Dashboard</h1>
+                    <p class="header-subtitle" th:if="${current}">
+                        Last update: <span th:text="${#temporals.format(current.timestamp, 'MMM d, yyyy HH:mm')}">--</span>
+                    </p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-refresh" onclick="location.reload()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6M1 20v-6h6"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+
+            <!-- Current Conditions -->
+            <section class="current-conditions">
+                <div class="condition-card temperature-card">
+                    <div class="card-header">
+                        <span class="card-label">Temperature</span>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                        </svg>
+                    </div>
+                    <div class="card-value">
+                        <span class="value" th:text="${current != null ? #numbers.formatDecimal(current.temperature, 1, 1) : '--'}">--</span>
+                        <span class="unit">°C</span>
+                    </div>
+                    <div class="card-footer">
+                        <span th:if="${stats24h}" class="range">
+                            24h: <span th:text="${#numbers.formatDecimal(stats24h.minTemperature, 1, 1)}">--</span>° / <span th:text="${#numbers.formatDecimal(stats24h.maxTemperature, 1, 1)}">--</span>°
+                        </span>
+                    </div>
+                </div>
+
+                <div class="condition-card humidity-card">
+                    <div class="card-header">
+                        <span class="card-label">Humidity</span>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                        </svg>
+                    </div>
+                    <div class="card-value">
+                        <span class="value" th:text="${current != null ? #numbers.formatDecimal(current.humidity, 1, 0) : '--'}">--</span>
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="humidity-bar">
+                        <div class="humidity-fill" th:style="${'width: ' + (current != null ? current.humidity : 0) + '%'}"></div>
+                    </div>
+                </div>
+
+                <div class="condition-card pressure-card">
+                    <div class="card-header">
+                        <span class="card-label">Pressure</span>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <div class="card-value">
+                        <span class="value" th:text="${current != null ? #numbers.formatDecimal(current.pressure, 1, 1) : '--'}">--</span>
+                        <span class="unit">hPa</span>
+                    </div>
+                    <div class="card-footer">
+                        <span class="trend">Stable</span>
+                    </div>
+                </div>
+
+                <div class="condition-card wind-card">
+                    <div class="card-header">
+                        <span class="card-label">Wind</span>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
+                        </svg>
+                    </div>
+                    <div class="card-value">
+                        <span class="value" th:text="${current != null and current.windSpeed != null ? #numbers.formatDecimal(current.windSpeed, 1, 1) : '--'}">--</span>
+                        <span class="unit">km/h</span>
+                    </div>
+                    <div class="wind-direction" th:if="${current != null and current.windDirection != null}">
+                        <svg viewBox="0 0 24 24" fill="currentColor" th:style="${'transform: rotate(' + current.windDirection + 'deg)'}">
+                            <path d="M12 2l-5 10h10L12 2z"/>
+                        </svg>
+                        <span th:text="${current.windDirection}">--</span>°
+                    </div>
+                </div>
+
+                <div class="condition-card rain-card">
+                    <div class="card-header">
+                        <span class="card-label">Rainfall</span>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 13v8M8 13v8M12 15v8"/>
+                            <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/>
+                        </svg>
+                    </div>
+                    <div class="card-value">
+                        <span class="value" th:text="${stats24h != null ? #numbers.formatDecimal(stats24h.totalRainfall, 1, 1) : '0.0'}">--</span>
+                        <span class="unit">mm</span>
+                    </div>
+                    <div class="card-footer">
+                        <span>Last 24 hours</span>
+                    </div>
+                </div>
+
+                <div class="condition-card uv-card">
+                    <div class="card-header">
+                        <span class="card-label">UV Index</span>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </svg>
+                    </div>
+                    <div class="card-value">
+                        <span class="value" th:text="${current != null and current.uvIndex != null ? #numbers.formatDecimal(current.uvIndex, 1, 1) : '--'}">--</span>
+                    </div>
+                    <div class="uv-scale">
+                        <div class="uv-level low">Low</div>
+                        <div class="uv-level moderate">Mod</div>
+                        <div class="uv-level high">High</div>
+                        <div class="uv-level very-high">V.High</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <div class="chart-container">
+                    <h3 class="chart-title">Temperature & Humidity (24h)</h3>
+                    <canvas id="tempHumidityChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Pressure (24h)</h3>
+                    <canvas id="pressureChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Stats Summary -->
+            <section class="stats-section" th:if="${stats24h}">
+                <h3 class="section-title">24-Hour Summary</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Avg Temperature</span>
+                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.avgTemperature, 1, 1) + '°C'}">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Avg Humidity</span>
+                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.avgHumidity, 1, 0) + '%'}">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Avg Pressure</span>
+                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.avgPressure, 1, 1) + ' hPa'}">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Max Wind</span>
+                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.maxWindSpeed, 1, 1) + ' km/h'}">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Rainfall</span>
+                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.totalRainfall, 1, 1) + ' mm'}">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Readings</span>
+                        <span class="stat-value" th:text="${stats24h.readingCount}">--</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const historyData = /*[[${history}]]*/ [];
+        
+        // Process data for charts
+        const labels = historyData.map(r => {
+            const date = new Date(r.timestamp);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        });
+        
+        const temperatures = historyData.map(r => r.temperature);
+        const humidities = historyData.map(r => r.humidity);
+        const pressures = historyData.map(r => r.pressure);
+
+        // Chart.js configuration
+        Chart.defaults.color = '#8b9dc3';
+        Chart.defaults.font.family = "'JetBrains Mono', monospace";
+
+        // Temperature & Humidity Chart
+        if (document.getElementById('tempHumidityChart')) {
+            new Chart(document.getElementById('tempHumidityChart'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Temperature (°C)',
+                            data: temperatures,
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Humidity (%)',
+                            data: humidities,
+                            borderColor: '#4ecdc4',
+                            backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(139, 157, 195, 0.1)'
+                            },
+                            ticks: {
+                                maxTicksLimit: 12
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: {
+                                color: 'rgba(139, 157, 195, 0.1)'
+                            },
+                            title: {
+                                display: true,
+                                text: '°C'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            title: {
+                                display: true,
+                                text: '%'
+                            },
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Pressure Chart
+        if (document.getElementById('pressureChart')) {
+            new Chart(document.getElementById('pressureChart'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Pressure (hPa)',
+                            data: pressures,
+                            borderColor: '#a29bfe',
+                            backgroundColor: 'rgba(162, 155, 254, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(139, 157, 195, 0.1)'
+                            },
+                            ticks: {
+                                maxTicksLimit: 12
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(139, 157, 195, 0.1)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'hPa'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Auto-refresh every 5 minutes
+        setTimeout(() => location.reload(), 5 * 60 * 1000);
+        /*]]>*/
+    </script>
+</body>
+</html>
+

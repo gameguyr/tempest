@@ -1,0 +1,28 @@
+spring:
+  # PostgreSQL Configuration (Production)
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:tempest}
+    username: ${DB_USERNAME:tempest}
+    password: ${DB_PASSWORD:tempest}
+    driver-class-name: org.postgresql.Driver
+
+  h2:
+    console:
+      enabled: false
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  thymeleaf:
+    cache: true
+
+logging:
+  level:
+    com.tempest: INFO
+    org.springframework: WARN
+

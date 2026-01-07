@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tempest - Stations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .stations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        
+        .station-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            transition: all var(--transition-normal);
+        }
+        
+        .station-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .station-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .station-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .station-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .station-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .station-status.active {
+            background: rgba(78, 205, 196, 0.2);
+            color: var(--accent-success);
+        }
+        
+        .station-status.inactive {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--accent-danger);
+        }
+        
+        .station-details {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .station-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .detail-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .detail-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+        }
+        
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 24px;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .add-station-hint {
+            margin-top: 24px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+        }
+        
+        .add-station-hint code {
+            display: block;
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                        <circle cx="12" cy="12" r="5"/>
+                    </svg>
+                </div>
+                <span class="logo-text">Tempest</span>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="/history" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    History
+                </a>
+                <a href="/stations" class="nav-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="10" r="3"/>
+                        <path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/>
+                    </svg>
+                    Stations
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>System Online</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="page-header">
+                <div class="header-content">
+                    <h1>Weather Stations</h1>
+                    <p class="header-subtitle">Manage your connected weather stations</p>
+                </div>
+            </header>
+
+            <div class="stations-grid" th:if="${stations != null and !stations.isEmpty()}">
+                <div class="station-card" th:each="station : ${stations}">
+                    <div class="station-header">
+                        <div>
+                            <div class="station-name" th:text="${station.name}">Station Name</div>
+                            <div class="station-id" th:text="${station.stationId}">station-id</div>
+                        </div>
+                        <span class="station-status" 
+                              th:classappend="${station.isActive} ? 'active' : 'inactive'"
+                              th:text="${station.isActive} ? 'Active' : 'Inactive'">Active</span>
+                    </div>
+                    
+                    <div class="station-details">
+                        <div class="station-detail" th:if="${station.location}">
+                            <span class="detail-label">Location</span>
+                            <span class="detail-value" th:text="${station.location}">--</span>
+                        </div>
+                        <div class="station-detail" th:if="${station.latitude != null}">
+                            <span class="detail-label">Coordinates</span>
+                            <span class="detail-value" th:text="${#numbers.formatDecimal(station.latitude, 1, 4) + ', ' + #numbers.formatDecimal(station.longitude, 1, 4)}">--</span>
+                        </div>
+                        <div class="station-detail" th:if="${station.altitude != null}">
+                            <span class="detail-label">Altitude</span>
+                            <span class="detail-value" th:text="${#numbers.formatDecimal(station.altitude, 1, 0) + ' m'}">--</span>
+                        </div>
+                        <div class="station-detail" th:if="${station.lastSeen}">
+                            <span class="detail-label">Last Seen</span>
+                            <span class="detail-value" th:text="${#temporals.format(station.lastSeen, 'MMM d, HH:mm')}">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="empty-state" th:if="${stations == null or stations.isEmpty()}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="10" r="3"/>
+                    <path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/>
+                </svg>
+                <h3>No Stations Registered</h3>
+                <p>Register your first weather station to start collecting data.</p>
+                
+                <div class="add-station-hint">
+                    <strong>Register a station via API:</strong>
+                    <code>curl -X POST http://localhost:8080/api/stations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stationId": "station-01",
+    "name": "Backyard Station",
+    "location": "Garden"
+  }'</code>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+
