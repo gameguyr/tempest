@@ -63,8 +63,11 @@
             <header class="page-header">
                 <div class="header-content">
                     <h1>Weather Dashboard</h1>
-                    <p class="header-subtitle" th:if="${current}">
-                        Last update: <span th:text="${#temporals.format(current.timestamp, 'MMM d, yyyy HH:mm')}">--</span>
+                    <p class="header-subtitle">
+                        <span id="current-time"></span>
+                        <span th:if="${current}">
+                            &nbsp;|&nbsp; Last update: <span th:text="${#temporals.format(current.timestamp, 'MMM d, yyyy HH:mm')}">--</span>
+                        </span>
                     </p>
                 </div>
                 <div class="header-actions">
@@ -386,6 +389,22 @@
 
         // Auto-refresh every 5 minutes
         setTimeout(() => location.reload(), 5 * 60 * 1000);
+        
+        // Live clock
+        function updateClock() {
+            const now = new Date();
+            const options = { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('current-time').textContent = now.toLocaleDateString('en-US', options);
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
         /*]]>*/
     </script>
 </body>
