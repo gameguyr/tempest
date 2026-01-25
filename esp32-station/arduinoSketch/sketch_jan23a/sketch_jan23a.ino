@@ -3,6 +3,7 @@
 #include <WiFiClientSecure.h>
 #include <DHT.h>
 #include <ArduinoJson.h>
+#include <time.h>
 
 // ============== CONFIGURATION ==============
 // WiFi credentials
@@ -25,10 +26,16 @@ const char* STATION_ID = "RussMonsta-House";
 
 // Reading interval (milliseconds)
 const unsigned long READING_INTERVAL = 60000;  // 1 minute
+
+// NTP Configuration - adjust for your timezone
+const char* NTP_SERVER = "pool.ntp.org";
+const long GMT_OFFSET_SEC = -8 * 3600;  // PST: UTC-8 (adjust for your timezone)
+const int DAYLIGHT_OFFSET_SEC = 0;      // Set to 3600 if daylight saving is active
 // ============================================
 
 DHT dht(DHT_PIN, DHT_TYPE);
 unsigned long lastReadingTime = 0;
+bool timeInitialized = false;
 
 void setup() {
   Serial.begin(115200);
@@ -44,12 +51,20 @@ void setup() {
 
   // Connect to WiFi
   connectWiFi();
+  
+  // Initialize NTP time sync
+  if (WiFi.status() == WL_CONNECTED) {
+    initTime();
+  }
 }
 
 void loop() {
   // Ensure WiFi is connected
   if (WiFi.status() != WL_CONNECTED) {
     connectWiFi();
+    if (WiFi.status() == WL_CONNECTED && !timeInitialized) {
+      initTime();
+    }
   }
 
   // Take reading at specified interval
@@ -60,6 +75,40 @@ void loop() {
   }
 
   delay(1000);
+}
+
+void initTime() {
+  Serial.println("[...] Syncing time with NTP server...");
+  configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
+  
+  // Wait for time to be set
+  struct tm timeinfo;
+  int attempts = 0;
+  while (!getLocalTime(&timeinfo) && attempts < 10) {
+    Serial.println("[...] Waiting for NTP time sync...");
+    delay(1000);
+    attempts++;
+  }
+  
+  if (getLocalTime(&timeinfo)) {
+    timeInitialized = true;
+    Serial.println("[OK] Time synchronized!");
+    Serial.print("    Current time: ");
+    Serial.println(&timeinfo, "%Y-%m-%d %H:%M:%S");
+  } else {
+    Serial.println("[WARN] Failed to sync time, will use server time");
+  }
+}
+
+String getTimestamp() {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    return "";  // Return empty string if time not available
+  }
+  
+  char buffer[25];
+  strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &timeinfo);
+  return String(buffer);
 }
 
 void connectWiFi() {
@@ -148,6 +197,14 @@ void sendReading(float temperature, float humidity) {
   doc["station_id"] = STATION_ID;
   doc["temp"] = temperature;
   doc["humidity"] = humidity;
+  
+  // Add timestamp if time is synchronized
+  String timestamp = getTimestamp();
+  if (timestamp.length() > 0) {
+    doc["timestamp"] = timestamp;
+    Serial.print("Timestamp: ");
+    Serial.println(timestamp);
+  }
   // DHT22 doesn't have these sensors, so we omit them or set null
   // The API should handle missing optional fields
   

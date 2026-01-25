@@ -58,7 +58,7 @@ public class DashboardController {
 
     @GetMapping("/history")
     public String history(Model model) {
-        List<WeatherReading> readings = weatherService.getReadingsForLastHours(168); // 7 days
+        List<WeatherReading> readings = weatherService.getReadingsForLastHoursDesc(168); // 7 days, most recent first
         model.addAttribute("readings", readings);
         return "history";
     }

@@ -43,10 +43,16 @@ public interface WeatherReadingRepository extends JpaRepository<WeatherReading, 
     Page<WeatherReading> findByStationIdOrderByTimestampDesc(String stationId, Pageable pageable);
 
     /**
-     * Get readings from the last N hours.
+     * Get readings from the last N hours (ascending for charts).
      */
     @Query("SELECT r FROM WeatherReading r WHERE r.timestamp >= :since ORDER BY r.timestamp ASC")
     List<WeatherReading> findReadingsSince(@Param("since") LocalDateTime since);
+
+    /**
+     * Get readings from the last N hours (descending for history view).
+     */
+    @Query("SELECT r FROM WeatherReading r WHERE r.timestamp >= :since ORDER BY r.timestamp DESC")
+    List<WeatherReading> findReadingsSinceDesc(@Param("since") LocalDateTime since);
 
     /**
      * Get readings from the last N hours for a specific station.

@@ -122,11 +122,19 @@ public class WeatherService {
     }
 
     /**
-     * Get readings from the last N hours.
+     * Get readings from the last N hours (ascending order for charts).
      */
     public List<WeatherReading> getReadingsForLastHours(int hours) {
         LocalDateTime since = LocalDateTime.now().minusHours(hours);
         return convertListToFahrenheit(readingRepository.findReadingsSince(since));
+    }
+
+    /**
+     * Get readings from the last N hours (descending order for history view).
+     */
+    public List<WeatherReading> getReadingsForLastHoursDesc(int hours) {
+        LocalDateTime since = LocalDateTime.now().minusHours(hours);
+        return convertListToFahrenheit(readingRepository.findReadingsSinceDesc(since));
     }
 
     /**
