@@ -213,14 +213,14 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
+                        alert('All readings have been deleted successfully!');
                         location.reload();
                     } else {
-                        alert('Error: ' + data.message);
+                        alert('Error: ' + (data.message || 'Failed to delete readings'));
                     }
                 })
                 .catch(error => {
-                    alert('Error deleting readings: ' + error);
+                    alert('Error deleting readings: ' + error.message);
                 });
             }
         }
