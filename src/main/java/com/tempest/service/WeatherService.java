@@ -73,20 +73,36 @@ public class WeatherService {
 
     /**
      * Convert a WeatherReading's temperature to Fahrenheit.
+     * Creates a new WeatherReading to avoid mutating the JPA-managed entity.
      */
     private WeatherReading convertToFahrenheit(WeatherReading reading) {
-        if (reading != null && reading.getTemperature() != null) {
-            reading.setTemperature(celsiusToFahrenheit(reading.getTemperature()));
+        if (reading == null) {
+            return null;
         }
-        return reading;
+        return WeatherReading.builder()
+                .id(reading.getId())
+                .stationId(reading.getStationId())
+                .timestamp(reading.getTimestamp())
+                .temperature(celsiusToFahrenheit(reading.getTemperature()))
+                .humidity(reading.getHumidity())
+                .pressure(reading.getPressure())
+                .windSpeed(reading.getWindSpeed())
+                .windDirection(reading.getWindDirection())
+                .rainfall(reading.getRainfall())
+                .uvIndex(reading.getUvIndex())
+                .lightLevel(reading.getLightLevel())
+                .batteryVoltage(reading.getBatteryVoltage())
+                .createdAt(reading.getCreatedAt())
+                .build();
     }
 
     /**
      * Convert a list of WeatherReadings' temperatures to Fahrenheit.
      */
     private List<WeatherReading> convertListToFahrenheit(List<WeatherReading> readings) {
-        readings.forEach(this::convertToFahrenheit);
-        return readings;
+        return readings.stream()
+                .map(this::convertToFahrenheit)
+                .toList();
     }
 
     /**
