@@ -84,7 +84,7 @@
                     </div>
                     <div class="card-value">
                         <span class="value" th:text="${current.temperature != null ? #numbers.formatDecimal(current.temperature, 1, 1) : '--'}">--</span>
-                        <span class="unit">°C</span>
+                        <span class="unit">°F</span>
                     </div>
                 </div>
 
@@ -158,7 +158,7 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Temperature (°C)',
+                            label: 'Temperature (°F)',
                             data: historyData.map(r => r.temperature),
                             borderColor: '#ff6b6b',
                             backgroundColor: 'rgba(255, 107, 107, 0.1)',
@@ -194,7 +194,7 @@
                             display: true,
                             position: 'left',
                             grid: { color: 'rgba(139, 157, 195, 0.1)' },
-                            title: { display: true, text: '°C' }
+                            title: { display: true, text: '°F' }
                         },
                         y1: {
                             type: 'linear',

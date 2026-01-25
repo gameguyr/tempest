@@ -26,6 +26,16 @@ public class WeatherService {
     private final WeatherStationRepository stationRepository;
 
     /**
+     * Convert Celsius to Fahrenheit.
+     */
+    private Double celsiusToFahrenheit(Double celsius) {
+        if (celsius == null) {
+            return null;
+        }
+        return (celsius * 9.0 / 5.0) + 32.0;
+    }
+
+    /**
      * Record a new weather reading from a station.
      */
     @Transactional
@@ -62,17 +72,37 @@ public class WeatherService {
     }
 
     /**
+     * Convert a WeatherReading's temperature to Fahrenheit.
+     */
+    private WeatherReading convertToFahrenheit(WeatherReading reading) {
+        if (reading != null && reading.getTemperature() != null) {
+            reading.setTemperature(celsiusToFahrenheit(reading.getTemperature()));
+        }
+        return reading;
+    }
+
+    /**
+     * Convert a list of WeatherReadings' temperatures to Fahrenheit.
+     */
+    private List<WeatherReading> convertListToFahrenheit(List<WeatherReading> readings) {
+        readings.forEach(this::convertToFahrenheit);
+        return readings;
+    }
+
+    /**
      * Get the latest weather reading.
      */
     public Optional<WeatherReading> getLatestReading() {
-        return readingRepository.findTopByOrderByTimestampDesc();
+        return readingRepository.findTopByOrderByTimestampDesc()
+                .map(this::convertToFahrenheit);
     }
 
     /**
      * Get the latest reading for a specific station.
      */
     public Optional<WeatherReading> getLatestReadingForStation(String stationId) {
-        return readingRepository.findTopByStationIdOrderByTimestampDesc(stationId);
+        return readingRepository.findTopByStationIdOrderByTimestampDesc(stationId)
+                .map(this::convertToFahrenheit);
     }
 
     /**
@@ -80,7 +110,7 @@ public class WeatherService {
      */
     public List<WeatherReading> getReadingsForLastHours(int hours) {
         LocalDateTime since = LocalDateTime.now().minusHours(hours);
-        return readingRepository.findReadingsSince(since);
+        return convertListToFahrenheit(readingRepository.findReadingsSince(since));
     }
 
     /**
@@ -88,7 +118,7 @@ public class WeatherService {
      */
     public List<WeatherReading> getReadingsForStation(String stationId, int hours) {
         LocalDateTime since = LocalDateTime.now().minusHours(hours);
-        return readingRepository.findReadingsSinceForStation(stationId, since);
+        return convertListToFahrenheit(readingRepository.findReadingsSinceForStation(stationId, since));
     }
 
     /**
@@ -110,18 +140,18 @@ public class WeatherService {
         }
 
         return WeatherStatsDTO.builder()
-                .minTemperature(readings.stream()
+                .minTemperature(celsiusToFahrenheit(readings.stream()
                         .filter(r -> r.getTemperature() != null)
                         .mapToDouble(WeatherReading::getTemperature)
-                        .min().orElse(0))
-                .maxTemperature(readings.stream()
+                        .min().orElse(0)))
+                .maxTemperature(celsiusToFahrenheit(readings.stream()
                         .filter(r -> r.getTemperature() != null)
                         .mapToDouble(WeatherReading::getTemperature)
-                        .max().orElse(0))
-                .avgTemperature(readings.stream()
+                        .max().orElse(0)))
+                .avgTemperature(celsiusToFahrenheit(readings.stream()
                         .filter(r -> r.getTemperature() != null)
                         .mapToDouble(WeatherReading::getTemperature)
-                        .average().orElse(0))
+                        .average().orElse(0)))
                 .avgHumidity(readings.stream()
                         .filter(r -> r.getHumidity() != null)
                         .mapToDouble(WeatherReading::getHumidity)

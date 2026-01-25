@@ -89,7 +89,7 @@
                     </div>
                     <div class="card-value">
                         <span class="value" th:text="${current != null ? #numbers.formatDecimal(current.temperature, 1, 1) : '--'}">--</span>
-                        <span class="unit">°C</span>
+                        <span class="unit">°F</span>
                     </div>
                     <div class="card-footer">
                         <span th:if="${stats24h}" class="range">
@@ -212,7 +212,7 @@
                 <div class="stats-grid">
                     <div class="stat-item">
                         <span class="stat-label">Avg Temperature</span>
-                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.avgTemperature, 1, 1) + '°C'}">--</span>
+                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.avgTemperature, 1, 1) + '°F'}">--</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Avg Humidity</span>
@@ -265,7 +265,7 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Temperature (°C)',
+                            label: 'Temperature (°F)',
                             data: temperatures,
                             borderColor: '#ff6b6b',
                             backgroundColor: 'rgba(255, 107, 107, 0.1)',
@@ -314,7 +314,7 @@
                             },
                             title: {
                                 display: true,
-                                text: '°C'
+                                text: '°F'
                             }
                         },
                         y1: {
