@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <DHT.h>
 #include <ArduinoJson.h>
 
@@ -8,11 +9,15 @@
 const char* WIFI_SSID = "FailureToConnect";
 const char* WIFI_PASSWORD = "willywonka";
 
-// Tempest API endpoint
-const char* API_URL = "http://192.168.68.115:8080/api/weather/reading";
+
+
+// Tempest API endpoint (Railway production)
+const char* API_URL = "https://tempest-production-a22b.up.railway.app/api/weather/reading";
+// Local API endpoint
+// const char* API_URL = "http://192.168.68.115:8080/api/weather/reading";
 
 // Station identifier
-const char* STATION_ID = "esp32-dht22-01";
+const char* STATION_ID = "RussMonsta-House";
 
 // DHT22 sensor configuration
 #define DHT_PIN 4        // GPIO pin connected to DHT22 data pin
@@ -112,13 +117,17 @@ void sendReading(float temperature, float humidity) {
     return;
   }
   
+  // Create secure client for HTTPS
+  WiFiClientSecure client;
+  client.setInsecure();  // Skip certificate verification (for simplicity)
+  
   // First test connectivity with ping endpoint
   HTTPClient httpTest;
-  String pingUrl = String("http://192.168.68.115:8080/api/weather/ping");
+  String pingUrl = String("https://tempest-production-a22b.up.railway.app/api/weather/ping");
   Serial.print("[...] Testing connection to: ");
   Serial.println(pingUrl);
   
-  httpTest.begin(pingUrl);
+  httpTest.begin(client, pingUrl);
   httpTest.setTimeout(10000);  // 10 second timeout
   int pingResult = httpTest.GET();
   Serial.print("[DEBUG] Ping result: ");
@@ -130,7 +139,7 @@ void sendReading(float temperature, float humidity) {
   httpTest.end();
   
   HTTPClient http;
-  http.begin(API_URL);
+  http.begin(client, API_URL);
   http.setTimeout(10000);  // 10 second timeout
   http.addHeader("Content-Type", "application/json");
   
