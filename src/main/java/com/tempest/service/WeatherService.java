@@ -58,13 +58,19 @@ public class WeatherService {
 
         WeatherReading saved = readingRepository.save(reading);
 
-        // Update station's last seen timestamp
+        // Get or create station and update last seen
         if (dto.getStationId() != null) {
-            stationRepository.findByStationId(dto.getStationId())
-                    .ifPresent(station -> {
-                        station.setLastSeen(LocalDateTime.now());
-                        stationRepository.save(station);
+            WeatherStation station = stationRepository.findByStationId(dto.getStationId())
+                    .orElseGet(() -> {
+                        WeatherStation newStation = WeatherStation.builder()
+                                .stationId(dto.getStationId())
+                                .name(dto.getStationId())
+                                .isActive(true)
+                                .build();
+                        return stationRepository.save(newStation);
                     });
+            station.setLastSeen(LocalDateTime.now());
+            stationRepository.save(station);
         }
 
         log.info("Recorded reading ID {} from station {}", saved.getId(), dto.getStationId());
