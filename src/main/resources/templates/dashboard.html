@@ -63,11 +63,28 @@
             <header class="page-header">
                 <div class="header-content">
                     <h1>Weather Dashboard</h1>
-                    <p class="header-subtitle" th:if="${current}">
-                        Last update: <span th:text="${#temporals.format(current.timestamp, 'MMM d, yyyy HH:mm')}">--</span>
+                    <p class="header-subtitle">
+                        <span th:if="${selectedStation != null}" th:text="'Viewing: ' + ${selectedStation}">Viewing: Station</span>
+                        <span th:if="${selectedStation == null}">Viewing: All Stations</span>
+                        <span th:if="${current}"> • </span>
+                        <span th:if="${current}">
+                            Last update: <span th:text="${#temporals.format(current.timestamp, 'MMM d, yyyy HH:mm')}">--</span>
+                        </span>
                     </p>
                 </div>
                 <div class="header-actions">
+                    <div class="station-selector">
+                        <a th:href="@{/}"
+                           th:class="${selectedStation == null ? 'station-btn active' : 'station-btn'}">
+                            All Stations
+                        </a>
+                        <a th:each="stationItem : ${stations}"
+                           th:href="@{/(station=${stationItem.stationId})}"
+                           th:class="${selectedStation == stationItem.stationId ? 'station-btn active' : 'station-btn'}"
+                           th:text="${stationItem.name}">
+                            Station Name
+                        </a>
+                    </div>
                     <button class="btn btn-refresh" onclick="location.reload()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M23 4v6h-6M1 20v-6h6"/>
@@ -384,8 +401,11 @@
             });
         }
 
-        // Auto-refresh every 5 minutes
-        setTimeout(() => location.reload(), 5 * 60 * 1000);
+        // Auto-refresh every 5 minutes (preserve station parameter)
+        setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            window.location.href = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        }, 5 * 60 * 1000);
         /*]]>*/
     </script>
 </body>

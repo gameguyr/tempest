@@ -203,6 +203,51 @@ public class WeatherService {
                 .build();
     }
 
+    /**
+     * Get weather statistics for a specific station for the last N hours.
+     */
+    public WeatherStatsDTO getStatsForStation(String stationId, int hours) {
+        LocalDateTime since = LocalDateTime.now().minusHours(hours);
+        List<WeatherReading> readings = readingRepository.findReadingsSinceForStation(stationId, since);
+
+        if (readings.isEmpty()) {
+            return WeatherStatsDTO.empty();
+        }
+
+        return WeatherStatsDTO.builder()
+                .minTemperature(celsiusToFahrenheit(readings.stream()
+                        .filter(r -> r.getTemperature() != null)
+                        .mapToDouble(WeatherReading::getTemperature)
+                        .min().orElse(0)))
+                .maxTemperature(celsiusToFahrenheit(readings.stream()
+                        .filter(r -> r.getTemperature() != null)
+                        .mapToDouble(WeatherReading::getTemperature)
+                        .max().orElse(0)))
+                .avgTemperature(celsiusToFahrenheit(readings.stream()
+                        .filter(r -> r.getTemperature() != null)
+                        .mapToDouble(WeatherReading::getTemperature)
+                        .average().orElse(0)))
+                .avgHumidity(readings.stream()
+                        .filter(r -> r.getHumidity() != null)
+                        .mapToDouble(WeatherReading::getHumidity)
+                        .average().orElse(0))
+                .avgPressure(readings.stream()
+                        .filter(r -> r.getPressure() != null)
+                        .mapToDouble(WeatherReading::getPressure)
+                        .average().orElse(0))
+                .totalRainfall(readings.stream()
+                        .filter(r -> r.getRainfall() != null)
+                        .mapToDouble(WeatherReading::getRainfall)
+                        .sum())
+                .maxWindSpeed(readings.stream()
+                        .filter(r -> r.getWindSpeed() != null)
+                        .mapToDouble(WeatherReading::getWindSpeed)
+                        .max().orElse(0))
+                .readingCount(readings.size())
+                .periodHours(hours)
+                .build();
+    }
+
     // Station management methods
 
     public List<WeatherStation> getAllStations() {
