@@ -21,38 +21,22 @@ public class DashboardController {
     private final WeatherService weatherService;
 
     @GetMapping("/")
-    public String dashboard(@RequestParam(required = false) String station, Model model) {
-        // Get active stations for toggle UI
-        model.addAttribute("stations", weatherService.getActiveStations());
-        model.addAttribute("selectedStation", station);
+    public String dashboard(Model model) {
+        // Fractal station data
+        weatherService.getLatestReadingForStation("fractal").ifPresent(reading ->
+            model.addAttribute("fractalCurrent", reading)
+        );
+        model.addAttribute("fractalHistory", weatherService.getReadingsForStation("fractal", 24));
+        model.addAttribute("fractalStats24h", weatherService.getStatsForStation("fractal", 24));
+        model.addAttribute("fractalStats7d", weatherService.getStatsForStation("fractal", 168));
 
-        if (station != null && !station.isBlank()) {
-            // Station-specific view
-            weatherService.getLatestReadingForStation(station).ifPresent(reading ->
-                model.addAttribute("current", reading)
-            );
-
-            // Get readings for the last 24 hours for charts
-            List<WeatherReading> history = weatherService.getReadingsForStation(station, 24);
-            model.addAttribute("history", history);
-
-            // Get statistics
-            model.addAttribute("stats24h", weatherService.getStatsForStation(station, 24));
-            model.addAttribute("stats7d", weatherService.getStatsForStation(station, 168)); // 7 days
-        } else {
-            // All stations view
-            weatherService.getLatestReading().ifPresent(reading ->
-                model.addAttribute("current", reading)
-            );
-
-            // Get readings for the last 24 hours for charts
-            List<WeatherReading> history = weatherService.getReadingsForLastHours(24);
-            model.addAttribute("history", history);
-
-            // Get statistics
-            model.addAttribute("stats24h", weatherService.getStats(24));
-            model.addAttribute("stats7d", weatherService.getStats(168)); // 7 days
-        }
+        // RussMonsta station data
+        weatherService.getLatestReadingForStation("RussMonsta-House").ifPresent(reading ->
+            model.addAttribute("russmonstaoCurrent", reading)
+        );
+        model.addAttribute("russmonstaHistory", weatherService.getReadingsForStation("RussMonsta-House", 24));
+        model.addAttribute("russmonstaStats24h", weatherService.getStatsForStation("RussMonsta-House", 24));
+        model.addAttribute("russmonstaStats7d", weatherService.getStatsForStation("RussMonsta-House", 168));
 
         return "dashboard";
     }
