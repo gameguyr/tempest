@@ -266,5 +266,29 @@ public class WeatherService {
     public WeatherStation createOrUpdateStation(WeatherStation station) {
         return stationRepository.save(station);
     }
+
+    /**
+     * Delete all weather readings.
+     */
+    @Transactional
+    public long deleteAllReadings() {
+        long count = readingRepository.count();
+        readingRepository.deleteAll();
+        log.info("Deleted {} weather readings", count);
+        return count;
+    }
+
+    /**
+     * Delete readings for a specific station.
+     */
+    @Transactional
+    public long deleteReadingsForStation(String stationId) {
+        List<WeatherReading> readings = readingRepository.findByStationIdOrderByTimestampDesc(
+            stationId, PageRequest.of(0, Integer.MAX_VALUE)).getContent();
+        long count = readings.size();
+        readingRepository.deleteAll(readings);
+        log.info("Deleted {} readings for station {}", count, stationId);
+        return count;
+    }
 }
 

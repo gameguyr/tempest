@@ -23,7 +23,7 @@
                 </div>
                 <span class="logo-text">Tempest</span>
             </div>
-            
+
             <div class="nav-links">
                 <a href="/" class="nav-link active">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -64,26 +64,21 @@
                 <div class="header-content">
                     <h1>Weather Dashboard</h1>
                     <p class="header-subtitle">
-                        <span th:if="${selectedStation != null}" th:text="'Viewing: ' + ${selectedStation}">Viewing: Station</span>
-                        <span th:if="${selectedStation == null}">Viewing: All Stations</span>
-                        <span th:if="${current}"> • </span>
-                        <span th:if="${current}">
-                            Last update: <span th:text="${#temporals.format(current.timestamp, 'MMM d, yyyy HH:mm')}">--</span>
-                        </span>
+                        <span id="current-time"></span>
                     </p>
                 </div>
                 <div class="header-actions">
-                    <div class="station-selector">
-                        <a th:href="@{/}"
-                           th:class="${selectedStation == null ? 'station-btn active' : 'station-btn'}">
-                            All Stations
-                        </a>
-                        <a th:each="stationItem : ${stations}"
-                           th:href="@{/(station=${stationItem.stationId})}"
-                           th:class="${selectedStation == stationItem.stationId ? 'station-btn active' : 'station-btn'}"
-                           th:text="${stationItem.name}">
-                            Station Name
-                        </a>
+                    <div class="station-toggles">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-fractal" checked onchange="toggleStation('fractal')">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Fractal</span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-russmonsta" checked onchange="toggleStation('russmonsta')">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">RussMonsta</span>
+                        </label>
                     </div>
                     <button class="btn btn-refresh" onclick="location.reload()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -95,195 +90,229 @@
                 </div>
             </header>
 
-            <!-- Current Conditions -->
-            <section class="current-conditions">
-                <div class="condition-card temperature-card">
-                    <div class="card-header">
-                        <span class="card-label">Temperature</span>
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
-                        </svg>
-                    </div>
-                    <div class="card-value">
-                        <span class="value" th:text="${current != null ? #numbers.formatDecimal(current.temperature, 1, 1) : '--'}">--</span>
-                        <span class="unit">°F</span>
-                    </div>
-                    <div class="card-footer">
-                        <span th:if="${stats24h}" class="range">
-                            24h: <span th:text="${#numbers.formatDecimal(stats24h.minTemperature, 1, 1)}">--</span>° / <span th:text="${#numbers.formatDecimal(stats24h.maxTemperature, 1, 1)}">--</span>°
-                        </span>
-                    </div>
-                </div>
+            <!-- Fractal Station -->
+            <div id="station-fractal" class="station-section">
+                <h2 class="station-title">Fractal Station</h2>
 
-                <div class="condition-card humidity-card">
-                    <div class="card-header">
-                        <span class="card-label">Humidity</span>
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-                        </svg>
+                <!-- Current Conditions -->
+                <section class="current-conditions">
+                    <div class="condition-card temperature-card">
+                        <div class="card-header">
+                            <span class="card-label">Temperature</span>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                            </svg>
+                        </div>
+                        <div class="card-value">
+                            <span class="value" th:text="${fractalCurrent != null ? #numbers.formatDecimal(fractalCurrent.temperature, 1, 1) : '--'}">--</span>
+                            <span class="unit">°F</span>
+                        </div>
+                        <div class="card-footer">
+                            <span th:if="${fractalStats24h}" class="range">
+                                24h: <span th:text="${#numbers.formatDecimal(fractalStats24h.minTemperature, 1, 1)}">--</span>° / <span th:text="${#numbers.formatDecimal(fractalStats24h.maxTemperature, 1, 1)}">--</span>°
+                            </span>
+                        </div>
                     </div>
-                    <div class="card-value">
-                        <span class="value" th:text="${current != null ? #numbers.formatDecimal(current.humidity, 1, 0) : '--'}">--</span>
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="humidity-bar">
-                        <div class="humidity-fill" th:style="${'width: ' + (current != null ? current.humidity : 0) + '%'}"></div>
-                    </div>
-                </div>
 
-                <div class="condition-card pressure-card">
-                    <div class="card-header">
-                        <span class="card-label">Pressure</span>
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M12 6v6l4 2"/>
-                        </svg>
+                    <div class="condition-card humidity-card">
+                        <div class="card-header">
+                            <span class="card-label">Humidity</span>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                            </svg>
+                        </div>
+                        <div class="card-value">
+                            <span class="value" th:text="${fractalCurrent != null ? #numbers.formatDecimal(fractalCurrent.humidity, 1, 0) : '--'}">--</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="humidity-bar">
+                            <div class="humidity-fill" th:style="${'width: ' + (fractalCurrent != null ? fractalCurrent.humidity : 0) + '%'}"></div>
+                        </div>
                     </div>
-                    <div class="card-value">
-                        <span class="value" th:text="${current != null ? #numbers.formatDecimal(current.pressure, 1, 1) : '--'}">--</span>
-                        <span class="unit">hPa</span>
-                    </div>
-                    <div class="card-footer">
-                        <span class="trend">Stable</span>
-                    </div>
-                </div>
 
-                <div class="condition-card wind-card">
-                    <div class="card-header">
-                        <span class="card-label">Wind</span>
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
-                        </svg>
+                    <div class="condition-card pressure-card">
+                        <div class="card-header">
+                            <span class="card-label">Pressure</span>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <div class="card-value">
+                            <span class="value" th:text="${fractalCurrent != null ? #numbers.formatDecimal(fractalCurrent.pressure, 1, 1) : '--'}">--</span>
+                            <span class="unit">hPa</span>
+                        </div>
                     </div>
-                    <div class="card-value">
-                        <span class="value" th:text="${current != null and current.windSpeed != null ? #numbers.formatDecimal(current.windSpeed, 1, 1) : '--'}">--</span>
-                        <span class="unit">km/h</span>
-                    </div>
-                    <div class="wind-direction" th:if="${current != null and current.windDirection != null}">
-                        <svg viewBox="0 0 24 24" fill="currentColor" th:style="${'transform: rotate(' + current.windDirection + 'deg)'}">
-                            <path d="M12 2l-5 10h10L12 2z"/>
-                        </svg>
-                        <span th:text="${current.windDirection}">--</span>°
-                    </div>
-                </div>
 
-                <div class="condition-card rain-card">
-                    <div class="card-header">
-                        <span class="card-label">Rainfall</span>
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M16 13v8M8 13v8M12 15v8"/>
-                            <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/>
-                        </svg>
+                    <div class="condition-card wind-card">
+                        <div class="card-header">
+                            <span class="card-label">Wind</span>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
+                            </svg>
+                        </div>
+                        <div class="card-value">
+                            <span class="value" th:text="${fractalCurrent != null and fractalCurrent.windSpeed != null ? #numbers.formatDecimal(fractalCurrent.windSpeed, 1, 1) : '--'}">--</span>
+                            <span class="unit">km/h</span>
+                        </div>
                     </div>
-                    <div class="card-value">
-                        <span class="value" th:text="${stats24h != null ? #numbers.formatDecimal(stats24h.totalRainfall, 1, 1) : '0.0'}">--</span>
-                        <span class="unit">mm</span>
-                    </div>
-                    <div class="card-footer">
-                        <span>Last 24 hours</span>
-                    </div>
-                </div>
+                </section>
 
-                <div class="condition-card uv-card">
-                    <div class="card-header">
-                        <span class="card-label">UV Index</span>
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="5"/>
-                            <line x1="12" y1="1" x2="12" y2="3"/>
-                            <line x1="12" y1="21" x2="12" y2="23"/>
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                            <line x1="1" y1="12" x2="3" y2="12"/>
-                            <line x1="21" y1="12" x2="23" y2="12"/>
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                        </svg>
+                <!-- Charts -->
+                <section class="charts-section">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Temperature & Humidity (24h)</h3>
+                        <canvas id="fractalTempHumidityChart"></canvas>
                     </div>
-                    <div class="card-value">
-                        <span class="value" th:text="${current != null and current.uvIndex != null ? #numbers.formatDecimal(current.uvIndex, 1, 1) : '--'}">--</span>
+                    <div class="chart-container">
+                        <h3 class="chart-title">Pressure (24h)</h3>
+                        <canvas id="fractalPressureChart"></canvas>
                     </div>
-                    <div class="uv-scale">
-                        <div class="uv-level low">Low</div>
-                        <div class="uv-level moderate">Mod</div>
-                        <div class="uv-level high">High</div>
-                        <div class="uv-level very-high">V.High</div>
-                    </div>
-                </div>
-            </section>
+                </section>
+            </div>
 
-            <!-- Charts Section -->
-            <section class="charts-section">
-                <div class="chart-container">
-                    <h3 class="chart-title">Temperature & Humidity (24h)</h3>
-                    <canvas id="tempHumidityChart"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h3 class="chart-title">Pressure (24h)</h3>
-                    <canvas id="pressureChart"></canvas>
-                </div>
-            </section>
+            <!-- RussMonsta Station -->
+            <div id="station-russmonsta" class="station-section">
+                <h2 class="station-title">RussMonsta Station</h2>
 
-            <!-- Stats Summary -->
-            <section class="stats-section" th:if="${stats24h}">
-                <h3 class="section-title">24-Hour Summary</h3>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <span class="stat-label">Avg Temperature</span>
-                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.avgTemperature, 1, 1) + '°F'}">--</span>
+                <!-- Current Conditions -->
+                <section class="current-conditions">
+                    <div class="condition-card temperature-card">
+                        <div class="card-header">
+                            <span class="card-label">Temperature</span>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                            </svg>
+                        </div>
+                        <div class="card-value">
+                            <span class="value" th:text="${russmonstaoCurrent != null ? #numbers.formatDecimal(russmonstaoCurrent.temperature, 1, 1) : '--'}">--</span>
+                            <span class="unit">°F</span>
+                        </div>
+                        <div class="card-footer">
+                            <span th:if="${russmonstaStats24h}" class="range">
+                                24h: <span th:text="${#numbers.formatDecimal(russmonstaStats24h.minTemperature, 1, 1)}">--</span>° / <span th:text="${#numbers.formatDecimal(russmonstaStats24h.maxTemperature, 1, 1)}">--</span>°
+                            </span>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Avg Humidity</span>
-                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.avgHumidity, 1, 0) + '%'}">--</span>
+
+                    <div class="condition-card humidity-card">
+                        <div class="card-header">
+                            <span class="card-label">Humidity</span>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                            </svg>
+                        </div>
+                        <div class="card-value">
+                            <span class="value" th:text="${russmonstaoCurrent != null ? #numbers.formatDecimal(russmonstaoCurrent.humidity, 1, 0) : '--'}">--</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="humidity-bar">
+                            <div class="humidity-fill" th:style="${'width: ' + (russmonstaoCurrent != null ? russmonstaoCurrent.humidity : 0) + '%'}"></div>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Avg Pressure</span>
-                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.avgPressure, 1, 1) + ' hPa'}">--</span>
+
+                    <div class="condition-card pressure-card">
+                        <div class="card-header">
+                            <span class="card-label">Pressure</span>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <div class="card-value">
+                            <span class="value" th:text="${russmonstaoCurrent != null ? #numbers.formatDecimal(russmonstaoCurrent.pressure, 1, 1) : '--'}">--</span>
+                            <span class="unit">hPa</span>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Max Wind</span>
-                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.maxWindSpeed, 1, 1) + ' km/h'}">--</span>
+
+                    <div class="condition-card wind-card">
+                        <div class="card-header">
+                            <span class="card-label">Wind</span>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
+                            </svg>
+                        </div>
+                        <div class="card-value">
+                            <span class="value" th:text="${russmonstaoCurrent != null and russmonstaoCurrent.windSpeed != null ? #numbers.formatDecimal(russmonstaoCurrent.windSpeed, 1, 1) : '--'}">--</span>
+                            <span class="unit">km/h</span>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Total Rainfall</span>
-                        <span class="stat-value" th:text="${#numbers.formatDecimal(stats24h.totalRainfall, 1, 1) + ' mm'}">--</span>
+                </section>
+
+                <!-- Charts -->
+                <section class="charts-section">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Temperature & Humidity (24h)</h3>
+                        <canvas id="russmonstaTempHumidityChart"></canvas>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Readings</span>
-                        <span class="stat-value" th:text="${stats24h.readingCount}">--</span>
+                    <div class="chart-container">
+                        <h3 class="chart-title">Pressure (24h)</h3>
+                        <canvas id="russmonstaPressureChart"></canvas>
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
         </main>
     </div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
-        const historyData = /*[[${history}]]*/ [];
-        
+        const fractalHistoryData = /*[[${fractalHistory}]]*/ [];
+        const russmonstaHistoryData = /*[[${russmonstaHistory}]]*/ [];
+
+        // Toggle station visibility
+        function toggleStation(stationId) {
+            const element = document.getElementById('station-' + stationId);
+            const checkbox = document.getElementById('toggle-' + stationId);
+            element.style.display = checkbox.checked ? 'block' : 'none';
+
+            // Save to localStorage
+            localStorage.setItem('show-' + stationId, checkbox.checked);
+        }
+
+        // Load toggle states from localStorage
+        function loadToggleStates() {
+            ['fractal', 'russmonsta'].forEach(stationId => {
+                const savedState = localStorage.getItem('show-' + stationId);
+                if (savedState !== null) {
+                    const checkbox = document.getElementById('toggle-' + stationId);
+                    checkbox.checked = savedState === 'true';
+                    toggleStation(stationId);
+                }
+            });
+        }
+
         // Process data for charts
-        const labels = historyData.map(r => {
-            const date = new Date(r.timestamp);
-            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        });
-        
-        const temperatures = historyData.map(r => r.temperature);
-        const humidities = historyData.map(r => r.humidity);
-        const pressures = historyData.map(r => r.pressure);
+        function createChartData(historyData) {
+            const labels = historyData.map(r => {
+                const date = new Date(r.timestamp);
+                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            });
+
+            return {
+                labels: labels,
+                temperatures: historyData.map(r => r.temperature),
+                humidities: historyData.map(r => r.humidity),
+                pressures: historyData.map(r => r.pressure)
+            };
+        }
+
+        const fractalData = createChartData(fractalHistoryData);
+        const russmonstaData = createChartData(russmonstaHistoryData);
 
         // Chart.js configuration
         Chart.defaults.color = '#8b9dc3';
         Chart.defaults.font.family = "'JetBrains Mono', monospace";
 
-        // Temperature & Humidity Chart
-        if (document.getElementById('tempHumidityChart')) {
-            new Chart(document.getElementById('tempHumidityChart'), {
+        // Create Temperature & Humidity Chart
+        function createTempHumidityChart(canvasId, chartData) {
+            new Chart(document.getElementById(canvasId), {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: chartData.labels,
                     datasets: [
                         {
                             label: 'Temperature (°F)',
-                            data: temperatures,
+                            data: chartData.temperatures,
                             borderColor: '#ff6b6b',
                             backgroundColor: 'rgba(255, 107, 107, 0.1)',
                             tension: 0.4,
@@ -292,7 +321,7 @@
                         },
                         {
                             label: 'Humidity (%)',
-                            data: humidities,
+                            data: chartData.humidities,
                             borderColor: '#4ecdc4',
                             backgroundColor: 'rgba(78, 205, 196, 0.1)',
                             tension: 0.4,
@@ -353,16 +382,16 @@
             });
         }
 
-        // Pressure Chart
-        if (document.getElementById('pressureChart')) {
-            new Chart(document.getElementById('pressureChart'), {
+        // Create Pressure Chart
+        function createPressureChart(canvasId, chartData) {
+            new Chart(document.getElementById(canvasId), {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: chartData.labels,
                     datasets: [
                         {
                             label: 'Pressure (hPa)',
-                            data: pressures,
+                            data: chartData.pressures,
                             borderColor: '#a29bfe',
                             backgroundColor: 'rgba(162, 155, 254, 0.1)',
                             tension: 0.4,
@@ -401,13 +430,34 @@
             });
         }
 
-        // Auto-refresh every 5 minutes (preserve station parameter)
-        setTimeout(() => {
-            const params = new URLSearchParams(window.location.search);
-            window.location.href = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-        }, 5 * 60 * 1000);
+        // Create all charts
+        createTempHumidityChart('fractalTempHumidityChart', fractalData);
+        createPressureChart('fractalPressureChart', fractalData);
+        createTempHumidityChart('russmonstaTempHumidityChart', russmonstaData);
+        createPressureChart('russmonstaPressureChart', russmonstaData);
+
+        // Load toggle states on page load
+        loadToggleStates();
+
+        // Auto-refresh every 5 minutes
+        setTimeout(() => location.reload(), 5 * 60 * 1000);
+
+        // Live clock
+        function updateClock() {
+            const now = new Date();
+            const options = {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('current-time').textContent = now.toLocaleDateString('en-US', options);
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
         /*]]>*/
     </script>
 </body>
 </html>
-

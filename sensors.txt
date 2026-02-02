@@ -1,0 +1,16 @@
+SGP30 Air Quality Sensor
+DHT22 Temperature and Humidity Sensor
+anemometer for wind speed and direction
+
+
+
+
+
+
+
+
+
+
+
+
+

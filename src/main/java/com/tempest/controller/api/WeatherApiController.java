@@ -120,5 +120,27 @@ public class WeatherApiController {
     public ResponseEntity<ApiResponse<String>> ping() {
         return ResponseEntity.ok(ApiResponse.success("pong"));
     }
+
+    /**
+     * DELETE all weather readings.
+     * Use with caution - this permanently deletes all data!
+     */
+    @DeleteMapping("/readings")
+    public ResponseEntity<ApiResponse<String>> deleteAllReadings() {
+        log.warn("Deleting ALL weather readings!");
+        long count = weatherService.deleteAllReadings();
+        return ResponseEntity.ok(ApiResponse.success("Deleted " + count + " readings"));
+    }
+
+    /**
+     * DELETE readings for a specific station.
+     */
+    @DeleteMapping("/readings/{stationId}")
+    public ResponseEntity<ApiResponse<String>> deleteReadingsForStation(
+            @PathVariable String stationId) {
+        log.warn("Deleting readings for station: {}", stationId);
+        long count = weatherService.deleteReadingsForStation(stationId);
+        return ResponseEntity.ok(ApiResponse.success("Deleted " + count + " readings for station " + stationId));
+    }
 }
 
