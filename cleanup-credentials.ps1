@@ -61,7 +61,7 @@ git filter-repo --replace-text passwords.txt --force
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""
-    Write-Host "✓ Successfully cleaned git history!" -ForegroundColor Green
+    Write-Host "[SUCCESS] Successfully cleaned git history!" -ForegroundColor Green
     Write-Host ""
     Write-Host "Next steps:" -ForegroundColor Cyan
     Write-Host "1. Review the changes with: git log" -ForegroundColor White
@@ -80,15 +80,17 @@ if ($LASTEXITCODE -eq 0) {
 
         if ($LASTEXITCODE -eq 0) {
             Write-Host ""
-            Write-Host "✓ Successfully pushed to GitHub!" -ForegroundColor Green
+            Write-Host "[SUCCESS] Successfully pushed to GitHub!" -ForegroundColor Green
             Write-Host ""
             Write-Host "Credentials have been removed from git history." -ForegroundColor Green
             Write-Host "REMEMBER: Change your WiFi passwords if you haven't already!" -ForegroundColor Red
-        } else {
-            Write-Host ""
-            Write-Host "✗ Push failed. Check your git remote configuration." -ForegroundColor Red
         }
-    } else {
+        else {
+            Write-Host ""
+            Write-Host "[ERROR] Push failed. Check your git remote configuration." -ForegroundColor Red
+        }
+    }
+    else {
         Write-Host ""
         Write-Host "Skipping push. You can push later with:" -ForegroundColor Yellow
         Write-Host "git push origin main --force" -ForegroundColor White
@@ -98,10 +100,10 @@ if ($LASTEXITCODE -eq 0) {
     Remove-Item "passwords.txt" -ErrorAction SilentlyContinue
     Write-Host ""
     Write-Host "Cleaned up temporary files." -ForegroundColor Green
-
-} else {
+}
+else {
     Write-Host ""
-    Write-Host "✗ git-filter-repo failed. Check the error messages above." -ForegroundColor Red
+    Write-Host "[ERROR] git-filter-repo failed. Check the error messages above." -ForegroundColor Red
     Remove-Item "passwords.txt" -ErrorAction SilentlyContinue
 }
 
