@@ -7,9 +7,9 @@
 
 //fartboner commit test
 // ============== CONFIGURATION ==============
-// WiFi credentials
-const char* WIFI_SSID = "FailureToConnect";
-const char* WIFI_PASSWORD = "willywonka";
+// WiFi credentials - REPLACE WITH YOUR OWN
+const char* WIFI_SSID = "YOUR_WIFI_SSID";
+const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
 
 

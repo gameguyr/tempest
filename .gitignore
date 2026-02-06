@@ -58,3 +58,7 @@ logs/
 coverage/
 *.exec
 
+# Arduino/ESP32 - Configuration files with credentials
+**/config.h
+**/credentials.h
+
