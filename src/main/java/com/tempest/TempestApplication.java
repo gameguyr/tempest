@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class TempestApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(Tempest Application.class, args);
+        SpringApplication.run(TempestApplication.class, args);
     }
 }
 
