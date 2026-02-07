@@ -24,6 +24,7 @@ public class WeatherService {
 
     private final WeatherReadingRepository readingRepository;
     private final WeatherStationRepository stationRepository;
+    private final AlertEvaluationService alertEvaluationService;
 
     /**
      * Convert Celsius to Fahrenheit.
@@ -71,6 +72,14 @@ public class WeatherService {
                     });
             station.setLastSeen(LocalDateTime.now());
             stationRepository.save(station);
+        }
+
+        // Trigger alert evaluation for this reading (non-blocking)
+        try {
+            alertEvaluationService.evaluateReading(saved);
+        } catch (Exception e) {
+            log.error("Error evaluating alerts for reading {}", saved.getId(), e);
+            // Don't fail the reading save if alert evaluation fails
         }
 
         log.info("Recorded reading ID {} from station {}", saved.getId(), dto.getStationId());
